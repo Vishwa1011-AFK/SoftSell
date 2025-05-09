@@ -1,8 +1,10 @@
 import Navbar from './components/Navbar';
-import Hero from './components/HeroSection';
-import HowItWorks from './components/HowItWorksSection';
-import WhyChooseUs from './components/ChooseUsSection'; 
-
+import Hero from './components/Hero';
+import HowItWorks from './components/HowItWorks';
+import WhyChooseUs from './components/WhyChooseUs';
+import Testimonials from './components/Testimonials';
+import ContactForm from './components/ContactForm';
+import Footer from './components/Footer'; 
 function App() {
   return (
     <>
@@ -10,8 +12,11 @@ function App() {
       <main>
         <Hero />
         <HowItWorks />
-        <WhyChooseUs /> 
+        <WhyChooseUs />
+        <Testimonials />
+        <ContactForm />
       </main>
+      <Footer />
     </>
   )
 }
