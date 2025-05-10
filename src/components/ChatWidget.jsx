@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { FiMessageSquare, FiX, FiSend, FiPaperclip } from 'react-icons/fi';  
+import { FiMessageSquare, FiX, FiSend } from 'react-icons/fi'; 
 
 const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -8,7 +8,7 @@ const ChatWidget = () => {
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef(null); 
+  const messagesEndRef = useRef(null);
 
   const predefinedQuestions = [
     "How do I sell my license?",
@@ -26,34 +26,81 @@ const ChatWidget = () => {
 
   const handleInputChange = (e) => setInputValue(e.target.value);
 
-  const handleSend = async () => {
-    if (inputValue.trim() === '') return;
+  const prepareApiMessages = (currentMessages, newUserText) => {
+    const apiMessages = currentMessages.map(msg => ({
+      role: msg.sender === 'ai' ? 'assistant' : 'user',
+      content: msg.text
+    }));
+    apiMessages.push({ role: 'user', content: newUserText });
+    return apiMessages;
+  };
 
-    const newUserMessage = { sender: 'user', text: inputValue };
+  const handleSend = async (textToSend) => { 
+    const messageText = (typeof textToSend === 'string' && textToSend.trim() !== '') ? textToSend : inputValue.trim();
+    
+    if (messageText === '') return;
+
+    const newUserMessage = { sender: 'user', text: messageText };
+
+    const recentMessagesForApi = messages.slice(-6); 
+    
     setMessages(prev => [...prev, newUserMessage]);
-    setInputValue('');
+    if (typeof textToSend !== 'string') {
+        setInputValue('');
+    }
     setIsLoading(true);
 
-    setTimeout(() => {
-      let aiResponseText = "I'm processing your request...";
-      if (inputValue.toLowerCase().includes("sell license")) {
-        aiResponseText = "To sell your license, you first upload the details, then we provide a valuation, and finally, you get paid! It's that easy.";
-      } else if (inputValue.toLowerCase().includes("types of licenses")) {
-        aiResponseText = "We buy various licenses including Microsoft, Adobe, Autodesk, VMware, and more. Feel free to ask about a specific one!";
-      } else if (inputValue.toLowerCase().includes("secure")) {
-        aiResponseText = "Yes, our process is highly secure. We prioritize your data security and confidentiality.";
-      } else {
-        aiResponseText = "Thanks for your message! An agent will be with you shortly, or I can try to answer general questions about SoftSell.";
+    const systemPrompt = {
+      role: "system",
+      content: "You are a friendly and concise assistant for SoftSell, a company that helps businesses sell their unused software licenses. SoftSell's process is: 1. Upload License Details, 2. Get a Fair Valuation, 3. Get Paid Quickly. Benefits: fast, secure, expert valuation. We buy licenses like Microsoft, Adobe, Autodesk. If a question is outside this scope, politely state you focus on SoftSell related queries or cannot provide that specific information."
+    };
+
+    const apiMessages = [
+      systemPrompt,
+      ...recentMessagesForApi.map(msg => ({
+        role: msg.sender === 'ai' ? 'assistant' : 'user',
+        content: msg.text
+      })),
+      { role: 'user', content: messageText }
+    ];
+    
+    try {
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${import.meta.env.VITE_GROQ_API_KEY}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          messages: apiMessages,
+          model: "llama3-8b-8192", 
+          temperature: 0.7, 
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Groq API Error:", errorData);
+        throw new Error(`API Error: ${response.status} ${errorData.error?.message || response.statusText}`);
       }
+
+      const data = await response.json();
+      const aiResponseText = data.choices[0]?.message?.content.trim() || "Sorry, I couldn't get a response. Please try again.";
       
       const newAiMessage = { sender: 'ai', text: aiResponseText };
       setMessages(prev => [...prev, newAiMessage]);
+
+    } catch (error) {
+      console.error("Failed to send message to Groq:", error);
+      const errorAiMessage = { sender: 'ai', text: `Sorry, I encountered an error. ${error.message}` };
+      setMessages(prev => [...prev, errorAiMessage]);
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   const handlePredefinedQuestion = (question) => {
-    setInputValue(question); 
+    handleSend(question);
   };
 
 
@@ -71,6 +118,7 @@ const ChatWidget = () => {
 
   return (
     <div className="fixed bottom-0 right-0 sm:bottom-6 sm:right-6 bg-white w-full h-full sm:w-96 sm:h-[600px] shadow-2xl rounded-t-lg sm:rounded-lg flex flex-col z-50 overflow-hidden">
+
       <div className="bg-blue-600 text-white p-4 flex justify-between items-center">
         <h3 className="font-semibold text-lg">SoftSell Assistant</h3>
         <button onClick={toggleChat} aria-label="Close chat">
@@ -82,8 +130,8 @@ const ChatWidget = () => {
         {messages.map((msg, index) => (
           <div key={index} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div
-              className={`max-w-[70%] p-3 rounded-xl ${
-                msg.sender === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'
+              className={`max-w-[80%] p-3 rounded-xl shadow ${ 
+                msg.sender === 'user' ? 'bg-blue-500 text-white ml-auto' : 'bg-gray-200 text-gray-800 mr-auto' 
               }`}
             >
               {msg.text}
@@ -92,7 +140,7 @@ const ChatWidget = () => {
         ))}
         {isLoading && (
           <div className="flex justify-start">
-            <div className="max-w-[70%] p-3 rounded-xl bg-gray-200 text-gray-800">
+            <div className="max-w-[80%] p-3 rounded-xl shadow bg-gray-200 text-gray-800 mr-auto">
               <span className="animate-pulse">Thinking...</span>
             </div>
           </div>
@@ -100,14 +148,13 @@ const ChatWidget = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="p-2 border-t border-gray-200 bg-gray-100">
-        <p className="text-xs text-gray-500 mb-1 text-center">Or ask about:</p>
+      <div className="p-3 border-t border-gray-200 bg-gray-100"> 
         <div className="flex flex-wrap gap-2 justify-center">
           {predefinedQuestions.map(q => (
             <button
               key={q}
               onClick={() => handlePredefinedQuestion(q)}
-              className="bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs px-2 py-1 rounded-md"
+              className="bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs px-3 py-1.5 rounded-full transition-colors" 
             >
               {q}
             </button>
@@ -116,25 +163,24 @@ const ChatWidget = () => {
       </div>
 
       <div className="p-4 border-t border-gray-200 bg-white">
-        <div className="flex items-center space-x-2">
+        <form onSubmit={(e) => { e.preventDefault(); handleSend(); }} className="flex items-center space-x-2"> 
           <input
             type="text"
             value={inputValue}
             onChange={handleInputChange}
-            onKeyPress={(e) => e.key === 'Enter' && !isLoading && handleSend()}
             placeholder="Type your message..."
-            className="flex-grow p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            className="flex-grow p-2.5 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" 
             disabled={isLoading}
           />
           <button
-            onClick={handleSend}
-            disabled={isLoading}
-            className="bg-blue-600 hover:bg-blue-700 text-white p-2.5 rounded-md disabled:opacity-50"
+            type="submit" 
+            disabled={isLoading || inputValue.trim() === ''} 
+            className="bg-blue-600 hover:bg-blue-700 text-white p-2.5 rounded-md disabled:opacity-50 transition-colors"
             aria-label="Send message"
           >
             <FiSend size={20} />
           </button>
-        </div>
+        </form>
       </div>
     </div>
   );
