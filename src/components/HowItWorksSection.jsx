@@ -1,3 +1,5 @@
+import SectionHeader from './SectionHeader';
+
 const Step = ({ number, title, description, icon }) => {
   return (
     <div className="flex flex-col items-center text-center p-4 md:p-6">
@@ -33,19 +35,16 @@ const HowItWorks = () => {
   ];
 
   return (
-    <section id="howitworks" className="py-16 bg-gray-50">
-      <div className="container mx-auto px-6">
-        <h2 className="text-3xl font-bold text-center text-gray-800 mb-4">
-          How It Works
-        </h2>
-        <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
-          Selling your unused software licenses with SoftSell is a straightforward three-step process.
-        </p>
-        <div className="grid md:grid-cols-3 gap-8">
+    <section id="howitworks" className="py-16 lg:py-20 bg-gray-50">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8"> 
+        <SectionHeader
+          title="How It Works"
+          subtitle="Selling your unused software licenses with SoftSell is a straightforward three-step process."
+        />
+        <div className="grid md:grid-cols-3 gap-8 lg:gap-12"> 
           {steps.map((step) => (
             <Step
               key={step.number}
-              number={step.number}
               title={step.title}
               description={step.description}
               icon={step.icon} 

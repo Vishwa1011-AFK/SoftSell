@@ -1,4 +1,3 @@
-// src/components/Footer.jsx
 const Footer = () => {
     const currentYear = new Date().getFullYear();
     return (
@@ -10,7 +9,6 @@ const Footer = () => {
           <p className="text-xs mt-2">
             A fictional company for a web development assignment.
           </p>
-          {/* Could add social media icons or other links here later */}
         </div>
       </footer>
     );

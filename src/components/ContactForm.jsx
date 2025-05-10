@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import SectionHeader from './SectionHeader';
 
 const ContactForm = () => {
   const [formData, setFormData] = useState({
@@ -58,14 +59,12 @@ const ContactForm = () => {
   };
 
   return (
-    <section id="contact" className="py-16 bg-gray-50"> 
-      <div className="container mx-auto px-6">
-        <h2 className="text-3xl font-bold text-center text-gray-800 mb-4">
-          Get in Touch
-        </h2>
-        <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
-          Have questions or ready to sell your licenses? Fill out the form below.
-        </p>
+    <section id="contact" className="py-16 lg:py-20 bg-gray-50">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <SectionHeader
+          title="Get in Touch"
+          subtitle="Have questions or ready to sell your licenses? Fill out the form below."
+        />
 
         <div className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-xl">
           {isSubmitted && (
