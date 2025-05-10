@@ -2,7 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  font-family: sans-serif;
-  @apply antialiased; 
+  @apply antialiased text-gray-800;
 }
