@@ -88,7 +88,7 @@ const Testimonials = () => {
       name: "Jane Doe",
       role: "IT Manager",
       company: "Innovatech Solutions",
-      image: "/placeholder.svg?height=56&width=56",
+      image: "https://avatar-placeholder.iran.liara.run/",
     },
     {
       quote:
@@ -96,7 +96,7 @@ const Testimonials = () => {
       name: "John Smith",
       role: "CFO",
       company: "TechPro Services",
-      image: "/placeholder.svg?height=56&width=56",
+      image: "https://avatar-placeholder.iran.liara.run/",
     },
     {
       quote:
